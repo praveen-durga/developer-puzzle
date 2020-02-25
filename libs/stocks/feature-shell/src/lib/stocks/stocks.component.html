@@ -27,6 +27,15 @@
         {{ timePeriod.viewValue }}
       </mat-option>
     </mat-select>
+    <mat-error
+      ><span
+        *ngIf="
+          !stockPickerForm.get('period').valid &&
+          stockPickerForm.get('period').touched
+        "
+        >Please select period</span
+      >
+    </mat-error>
   </mat-form-field>
 
   <button (click)="fetchQuote()" mat-raised-button>Go</button>
