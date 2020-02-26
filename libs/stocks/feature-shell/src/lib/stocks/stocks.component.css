@@ -1,3 +1,11 @@
 mat-form-field {
   display: block;
 }
+
+.d-flex {
+  display: flex;
+}
+
+.flex-item {
+  margin-right: 50px;
+}

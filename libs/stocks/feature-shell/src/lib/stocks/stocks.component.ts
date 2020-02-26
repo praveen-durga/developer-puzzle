@@ -9,35 +9,49 @@ import { PriceQueryFacade } from '@coding-challenge/stocks/data-access-price-que
 })
 export class StocksComponent implements OnInit {
   stockPickerForm: FormGroup;
-  symbol: string;
   period: string;
+  maxDate: Date = new Date();
+  toMinDate: Date;
 
   quotes$ = this.priceQuery.priceQueries$;
-
-  timePeriods = [
-    { viewValue: 'All available data', value: 'max' },
-    { viewValue: 'Five years', value: '5y' },
-    { viewValue: 'Two years', value: '2y' },
-    { viewValue: 'One year', value: '1y' },
-    { viewValue: 'Year-to-date', value: 'ytd' },
-    { viewValue: 'Six months', value: '6m' },
-    { viewValue: 'Three months', value: '3m' },
-    { viewValue: 'One month', value: '1m' }
-  ];
 
   constructor(private fb: FormBuilder, private priceQuery: PriceQueryFacade) {
     this.stockPickerForm = fb.group({
       symbol: [null, Validators.required],
-      period: [null, Validators.required]
+      from: [null, Validators.required],
+      to: [null, Validators.required],
     });
   }
 
   ngOnInit() {}
 
+  get symbol() {
+    return this.stockPickerForm.get('symbol');
+  }
+
+  get fromDate() {
+    return this.stockPickerForm.get('from');
+  }
+
+  get toDate() {
+    return this.stockPickerForm.get('to');
+  }
+
+  fromDateFilter(d: Date | null): boolean {
+    const day = (d || new Date()).getDay();
+    // Prevent Saturday and Sunday from being selected.
+    return day !== 0 && day !== 6;
+  }
+
+  setToMinDate() {
+    this.toMinDate = new Date(this.fromDate.value);
+  }
+
   fetchQuote() {
     if (this.stockPickerForm.valid) {
-      const { symbol, period } = this.stockPickerForm.value;
-      this.priceQuery.fetchQuote(symbol, period);
+      const symbol  = this.symbol.value;
+      const period = (this.toDate.value.getTime() - this.fromDate.value.getTime()) / (1000 * 3600 * 24);
+      this.priceQuery.fetchQuote(symbol, `${period + 1}d`);
     }
   }
 }
