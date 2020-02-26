@@ -15,22 +15,28 @@ import {
 } from './price-query.actions';
 import { PriceQueryPartialState } from './price-query.reducer';
 import { PriceQueryResponse } from './price-query.type';
+import { of } from 'rxjs';
 
 @Injectable()
 export class PriceQueryEffects {
+  private cachedData = new Map<string, PriceQueryResponse[]>();
   @Effect() loadPriceQuery$ = this.dataPersistence.fetch(
     PriceQueryActionTypes.FetchPriceQuery,
     {
       run: (action: FetchPriceQuery, state: PriceQueryPartialState) => {
+        const endPoint = `${this.env.apiURL}/beta/stock/${action.symbol}/chart/${action.period}?token=${this.env.apiKey}`;
+        if (this.cachedData.get(endPoint)) {
+          return of(new PriceQueryFetched(this.cachedData.get(endPoint)));
+        } else {
         return this.httpClient
-          .get(
-            `${this.env.apiURL}/beta/stock/${action.symbol}/chart/${
-              action.period
-            }?token=${this.env.apiKey}`
-          )
+          .get(endPoint)
           .pipe(
-            map(resp => new PriceQueryFetched(resp as PriceQueryResponse[]))
-          );
+            map(resp => {
+              this.cachedData.set(endPoint, resp as PriceQueryResponse[]);
+              return new PriceQueryFetched(resp as PriceQueryResponse[]);
+            }
+          ));
+        }
       },
 
       onError: (action: FetchPriceQuery, error) => {
