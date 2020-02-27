@@ -1,5 +1,6 @@
 <form [formGroup]="stockPickerForm">
   <mat-form-field>
+    <mat-label>Enter Symbol</mat-label>
     <input
       matInput
       placeholder="Symbol e.g AAPL"
@@ -19,10 +20,11 @@
 
   <mat-form-field>
     <mat-label>Favorite time period</mat-label>
-    <mat-select formControlName="period">
+    <mat-select formControlName="period" role="listbox">
       <mat-option
         *ngFor="let timePeriod of timePeriods"
         [value]="timePeriod.value"
+        role="option"
       >
         {{ timePeriod.viewValue }}
       </mat-option>
