@@ -16,20 +16,65 @@
       >
     </mat-error>
   </mat-form-field>
-
-  <mat-form-field>
-    <mat-label>Favorite time period</mat-label>
-    <mat-select formControlName="period">
-      <mat-option
-        *ngFor="let timePeriod of timePeriods"
-        [value]="timePeriod.value"
-      >
-        {{ timePeriod.viewValue }}
-      </mat-option>
-    </mat-select>
-  </mat-form-field>
-
+  <!-- [matDatepickerFilter]="fromDateFilter" -->
+  <div class="d-flex">
+    <div class="flex-item">
+      <mat-form-field>
+        <mat-label>From:</mat-label>
+        <input
+          matInput
+          formControlName="from"
+          [matDatepicker]="fromDate"
+          [max]="maxDate"
+          disabled
+          (dateChange)="setToMinDate()"
+        />
+        <mat-datepicker-toggle
+          matSuffix
+          [for]="fromDate"
+        ></mat-datepicker-toggle>
+        <mat-datepicker #fromDate disabled="false"></mat-datepicker>
+        <mat-error>
+          <span
+            *ngIf="
+              !stockPickerForm.get('from').valid &&
+              stockPickerForm.get('from').touched
+            "
+          >
+            Please select valid From date.
+          </span>
+        </mat-error>
+      </mat-form-field>
+    </div>
+    <div class="flex-item">
+      <mat-form-field>
+        <mat-label>To:</mat-label>
+        <input
+          matInput
+          formControlName="to"
+          [matDatepicker]="toDate"
+          [max]="maxDate"
+          [min]="toMinDate"
+          disabled
+        />
+        <mat-datepicker-toggle matSuffix [for]="toDate"></mat-datepicker-toggle>
+        <mat-datepicker #toDate disabled="false"></mat-datepicker>
+        <mat-error>
+          <span
+            *ngIf="
+              !stockPickerForm.get('to').valid &&
+              stockPickerForm.get('to').touched
+            "
+          >
+            Please select valid To date.<i
+              >(It should be greater than from date.)</i
+            >
+          </span>
+        </mat-error>
+      </mat-form-field>
+    </div>
+  </div>
   <button (click)="fetchQuote()" mat-raised-button>Go</button>
 </form>
 
-<coding-challenge-chart [data$]="quotes$"></coding-challenge-chart>
+<coding-challenge-chart [data$]="filteredQuotes$"></coding-challenge-chart>

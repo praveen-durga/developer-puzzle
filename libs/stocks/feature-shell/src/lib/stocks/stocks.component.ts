@@ -1,43 +1,82 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { PriceQueryFacade } from '@coding-challenge/stocks/data-access-price-query';
+import { Subject, Subscription } from 'rxjs';
 
 @Component({
   selector: 'coding-challenge-stocks',
   templateUrl: './stocks.component.html',
   styleUrls: ['./stocks.component.css']
 })
-export class StocksComponent implements OnInit {
+export class StocksComponent implements OnInit, OnDestroy {
+  private quotesSubscription: Subscription;
+  private filteredQuotes;
+  private quotes$ = this.priceQuery.priceQueries$;
+  
   stockPickerForm: FormGroup;
-  symbol: string;
   period: string;
-
-  quotes$ = this.priceQuery.priceQueries$;
-
-  timePeriods = [
-    { viewValue: 'All available data', value: 'max' },
-    { viewValue: 'Five years', value: '5y' },
-    { viewValue: 'Two years', value: '2y' },
-    { viewValue: 'One year', value: '1y' },
-    { viewValue: 'Year-to-date', value: 'ytd' },
-    { viewValue: 'Six months', value: '6m' },
-    { viewValue: 'Three months', value: '3m' },
-    { viewValue: 'One month', value: '1m' }
-  ];
+  maxDate: Date = new Date();
+  toMinDate: Date;
+  filteredQuotes$ = new Subject<any>();
 
   constructor(private fb: FormBuilder, private priceQuery: PriceQueryFacade) {
     this.stockPickerForm = fb.group({
       symbol: [null, Validators.required],
-      period: [null, Validators.required]
+      from: [null, Validators.required],
+      to: [null, Validators.required]
     });
   }
 
-  ngOnInit() {}
+  ngOnInit() {
+    this.quotesSubscription = this.quotes$.subscribe((data: any[]) => {
+      if (data) {
+        this.filteredQuotes = data.filter(quote => {
+          const quoteDate = new Date(quote[0]);
+          return (
+            quoteDate.getTime() >= this.fromDate.value.getTime() &&
+            quoteDate.getTime() <= ( this.toDate.value.getTime() + ((1000 * 3600 * 24)))
+          );
+        });
+        if (this.filteredQuotes.length > 0) {
+          this.filteredQuotes$.next(this.filteredQuotes);
+        }
+      }
+    });
+  }
+
+  get symbol() {
+    return this.stockPickerForm.get('symbol');
+  }
+
+  get fromDate() {
+    return this.stockPickerForm.get('from');
+  }
+
+  get toDate() {
+    return this.stockPickerForm.get('to');
+  }
+
+  fromDateFilter(d: Date | null): boolean {
+    const day = (d || new Date()).getDay();
+    // Prevent Saturday and Sunday from being selected.
+    return day !== 0 && day !== 6;
+  }
+
+  setToMinDate() {
+    this.toMinDate = new Date(this.fromDate.value);
+  }
 
   fetchQuote() {
     if (this.stockPickerForm.valid) {
-      const { symbol, period } = this.stockPickerForm.value;
+      const symbol = this.symbol.value;
+      const period = 'max';
       this.priceQuery.fetchQuote(symbol, period);
     }
+  }
+  ngOnDestroy() {
+    if (this.quotesSubscription) {
+      this.quotesSubscription.unsubscribe();
+    }
+    this.filteredQuotes$.unsubscribe();
   }
 }
