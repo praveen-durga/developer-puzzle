@@ -29,3 +29,8 @@ export type PriceQueryResponse = {
   label: string;
   changeOverTime: number;
 };
+
+export type PriceQueryCacheData = {
+  data: PriceQueryResponse[];
+  expires: Date;
+};
