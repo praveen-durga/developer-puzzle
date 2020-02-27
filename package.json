@@ -5,7 +5,7 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "serve:stocks": "ng serve stocks",
+    "serve:stocks": "ng serve stocks --proxy-config ./proxy.conf.json",
     "serve:stocks-api": "ng run stocks-api:serve",
     "build": "ng build",
     "test": "ng test",
