@@ -4,7 +4,6 @@
       matInput
       placeholder="Symbol e.g AAPL"
       formControlName="symbol"
-      (input)="onInputChanged()"
       value=""
     />
     <mat-error
@@ -20,7 +19,7 @@
 
   <mat-form-field>
     <mat-label>Favorite time period</mat-label>
-    <mat-select formControlName="period" (selectionChange)="onInputChanged()">
+    <mat-select formControlName="period">
       <mat-option
         *ngFor="let timePeriod of timePeriods"
         [value]="timePeriod.value"

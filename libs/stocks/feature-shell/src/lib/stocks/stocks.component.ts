@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { PriceQueryFacade } from '@coding-challenge/stocks/data-access-price-query';
-import { Subject } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 
 @Component({
@@ -10,7 +10,7 @@ import { debounceTime } from 'rxjs/operators';
   styleUrls: ['./stocks.component.css']
 })
 export class StocksComponent implements OnInit, OnDestroy {
-  private delaySubject = new Subject();
+  private valueChangeSubscription : Subscription;
   stockPickerForm: FormGroup;
   symbol: string;
   period: string;
@@ -36,13 +36,9 @@ export class StocksComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    this.delaySubject.pipe(debounceTime(300)).subscribe(() => {
-      this.fetchQuote();
-    });
-  }
-
-  onInputChanged() {
-    this.delaySubject.next();
+    this.valueChangeSubscription = this.stockPickerForm.valueChanges.pipe(
+      debounceTime(300)
+    ).subscribe(() => this.fetchQuote());
   }
 
   fetchQuote() {
@@ -53,6 +49,8 @@ export class StocksComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.delaySubject.unsubscribe();
+    if (this.valueChangeSubscription) {
+      this.valueChangeSubscription.unsubscribe();
+    }
   }
 }
