@@ -1,8 +1,8 @@
 {
-    "http://sandbox.iexapis.com/*": {
+    "/api/*": {
       "target": "http://localhost:3333",
       "secure": false,
       "logLevel": "debug",
-      "changeOrigin": true
+      "changeOrigin": false
     }
   }
