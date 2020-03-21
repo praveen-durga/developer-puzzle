@@ -34,7 +34,7 @@ export class PriceQueryEffects {
           return this.httpClient.get(endPoint).pipe(
             map(resp => {
               const expiredDate = new Date();
-              expiredDate.setMinutes(expiredDate.getMinutes() + 1);
+              expiredDate.setSeconds(expiredDate.getSeconds() + 10);
               this.cachedData.set(endPoint, {
                 data: resp as PriceQueryResponse[],
                 expires: expiredDate
