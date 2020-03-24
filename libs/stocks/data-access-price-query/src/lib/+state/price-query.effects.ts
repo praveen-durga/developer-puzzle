@@ -14,23 +14,35 @@ import {
   PriceQueryFetchError
 } from './price-query.actions';
 import { PriceQueryPartialState } from './price-query.reducer';
-import { PriceQueryResponse } from './price-query.type';
+import { PriceQueryResponse, PriceQueryCacheData } from './price-query.type';
+import { of } from 'rxjs';
 
 @Injectable()
 export class PriceQueryEffects {
+  private cachedData = new Map<string, PriceQueryCacheData>();
   @Effect() loadPriceQuery$ = this.dataPersistence.fetch(
     PriceQueryActionTypes.FetchPriceQuery,
     {
       run: (action: FetchPriceQuery, state: PriceQueryPartialState) => {
-        return this.httpClient
-          .get(
-            `${this.env.apiURL}/beta/stock/${action.symbol}/chart/${
-              action.period
-            }?token=${this.env.apiKey}`
-          )
-          .pipe(
-            map(resp => new PriceQueryFetched(resp as PriceQueryResponse[]))
+        const endPoint = `${this.env.apiURL}/beta/stock/${
+          action.symbol
+        }/chart/${action.period}?token=${this.env.apiKey}`;
+        const tempData = this.cachedData.get(endPoint);
+        if (tempData && new Date().getTime() < tempData.expires.getTime()) {
+          return of(new PriceQueryFetched(this.cachedData.get(endPoint).data));
+        } else {
+          return this.httpClient.get(endPoint).pipe(
+            map(resp => {
+              const expiredDate = new Date();
+              expiredDate.setSeconds(expiredDate.getSeconds() + 10);
+              this.cachedData.set(endPoint, {
+                data: resp as PriceQueryResponse[],
+                expires: expiredDate
+              });
+              return new PriceQueryFetched(resp as PriceQueryResponse[]);
+            })
           );
+        }
       },
 
       onError: (action: FetchPriceQuery, error) => {
